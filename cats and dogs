@@ -1,0 +1,47 @@
+# Importing necessary libraries
+import numpy as np
+import os
+import cv2
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+
+# Define paths to your dataset
+dataset_path = "path_to_your_dataset_folder"
+
+# Define function to load images from directory
+def load_images_from_folder(folder):
+    images = []
+    for filename in os.listdir(folder):
+        img = cv2.imread(os.path.join(folder, filename))
+        if img is not None:
+            images.append(img)
+    return images
+
+# Load images of cats and dogs
+cats = load_images_from_folder(os.path.join(dataset_path, "cats"))
+dogs = load_images_from_folder(os.path.join(dataset_path, "dogs"))
+
+# Labeling the data
+X = np.array(cats + dogs)
+y = np.array([0] * len(cats) + [1] * len(dogs))  # 0 for cats, 1 for dogs
+
+# Splitting the data into training and testing sets (80% train, 20% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Define a pipeline to scale features and train SVM
+model = make_pipeline(StandardScaler(), SVC(kernel='linear'))
+
+# Training the SVM
+model.fit(X_train.reshape(len(X_train), -1), y_train)
+
+# Predicting on the test set
+y_pred = model.predict(X_test.reshape(len(X_test), -1))
+
+# Evaluating the model
+accuracy = accuracy_score(y_test, y_pred)
+print("Accuracy:", accuracy)
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
